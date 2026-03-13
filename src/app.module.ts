@@ -6,10 +6,25 @@ import { ProductService } from './product/product.service';
 import { ProductController } from './product/product.controller';
 import { EmployeeModule } from './employee/employee.module';
 import { StudentModule } from './student/student.module';
+import { CustomerModule } from './customer/customer.module';
+import { AuthModule } from './auth/auth.module';
+import { UserService } from './user/user.service';
+import { UserModule } from './user/user.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule } from '@nestjs/config';
+
 
 @Module({
-  imports: [EmployeeModule, StudentModule],
-  controllers: [AppController, UserController, ProductController],
+  imports: [
+    EmployeeModule,
+    StudentModule,
+    CustomerModule,
+    AuthModule,
+    UserModule,
+    ConfigModule.forRoot(),
+    MongooseModule.forRoot(process.env.MONGODB_URL as string),
+  ],
+  controllers: [AppController, ProductController],
   providers: [AppService, ProductService],
 })
 export class AppModule {}
