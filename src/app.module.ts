@@ -16,12 +16,12 @@ import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     EmployeeModule,
     StudentModule,
     CustomerModule,
     AuthModule,
     UserModule,
-    ConfigModule.forRoot(),
     MongooseModule.forRoot(process.env.MONGODB_URL as string),
   ],
   controllers: [AppController, ProductController],
