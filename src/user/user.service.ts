@@ -9,6 +9,11 @@ import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { LoginUserDto } from 'src/dto/loginUserDto.dto';
+import bcrypt from 'bcrypt';
+import {
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from 'src/dto/forgotPasswordDto.dto';
 
 @Injectable()
 export class UserService {
@@ -33,7 +38,6 @@ export class UserService {
   }
 
   async getAllUser() {
-    
     const users = await this.userModule.find(); // we can use .select("-password") for remove the password
 
     return users.map((user) => ({
@@ -43,5 +47,66 @@ export class UserService {
       email: user.email,
       password: user.password,
     }));
+  }
+
+  async getUserById(id: string) {
+    const user = await this.userModule.findById(id).select('-password');
+    // console.log('users are:', user, 'id is:', id);
+    return user;
+  }
+
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+    const user = await this.userModule.findOne({
+      email: forgotPasswordDto.email,
+    });
+
+    console.log('user email is', user);
+
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const OTP = Math.floor(100000 + Math.random() * 900000);
+
+    user.resetOtp = OTP;
+    user.expireOtp = Date.now() + 10 * 60 * 1000;
+
+    await user.save();
+
+    return {
+      message: 'OTP generated',
+      otp: OTP,
+    };
+  }
+
+  async resetPassword(resetPasswordDto: ResetPasswordDto) {
+    const user = await this.userModule.findOne({
+      email: resetPasswordDto.email,
+    });
+
+    if (!user) {
+      throw new BadRequestException('User not found!');
+    }
+
+    if (!user.resetOtp || !user.expireOtp) {
+      throw new BadRequestException('OTP not generated');
+    }
+
+    if (user.resetOtp !== resetPasswordDto.otp) {
+      throw new BadRequestException('Invalid OTP');
+    }
+
+    if (user.expireOtp < Date.now()) {
+      throw new BadRequestException('OTP expired');
+    }
+
+    // make new password hash
+    const hashedPassword = await bcrypt.hash(resetPasswordDto.newPassword, 10);
+    user.password = hashedPassword; // update password with the new password
+    user.resetOtp = null;
+    user.expireOtp = null;
+    await user.save();
+
+    return { message: 'Password reset successfully!!' };
   }
 }

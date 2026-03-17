@@ -12,6 +12,7 @@ import { UserService } from './user/user.service';
 import { UserModule } from './user/user.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConfigModule } from '@nestjs/config';
+import { MailModule } from './mail/mail.module';
 
 
 @Module({
@@ -23,6 +24,7 @@ import { ConfigModule } from '@nestjs/config';
     AuthModule,
     UserModule,
     MongooseModule.forRoot(process.env.MONGODB_URL as string),
+    MailModule,
   ],
   controllers: [AppController, ProductController],
   providers: [AppService, ProductService],

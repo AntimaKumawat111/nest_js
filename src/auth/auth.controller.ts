@@ -1,12 +1,28 @@
-import { Body, Controller, Get, Param, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterUserDto } from 'src/dto/registerUserDto.dto';
 import { AuthGuard } from './auth.guard';
 import { LoginUserDto } from 'src/dto/loginUserDto.dto';
+import { UserService } from 'src/user/user.service';
+import {
+  ForgotPasswordDto,
+  ResetPasswordDto,
+} from 'src/dto/forgotPasswordDto.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   @Post('register')
   async registerUser(@Body() registerUserDto: RegisterUserDto) {
@@ -23,6 +39,21 @@ export class AuthController {
   @UseGuards(AuthGuard) // it is making routes secure
   @Get('profile')
   async getProfile(@Request() req) {
-    return  req.user;
+    const userId = req.user.sub;
+    const user = await this.userService.getUserById(userId);
+    // console.log('------> user is', user);
+    return user;
+  }
+
+  @Post('forgot-password')
+  async forgetPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    const user = await this.userService.forgotPassword(forgotPasswordDto);
+    return user;
+  }
+
+  @UseGuards(AuthGuard) 
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+   return await this.userService.resetPassword(resetPasswordDto);
   }
 }

@@ -20,6 +20,12 @@ export class User {
 
   @Prop({ default: Role.Student })
   role: string;
+
+  @Prop({ type: Number, default: null })
+  resetOtp: number | null;
+
+  @Prop({ type: Number, default: null })
+  expireOtp: number | null;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -20,13 +20,18 @@ export class AuthService {
   async registerUser(registerUserDto: RegisterUserDto) {
     const saltRounds = 10;
     const hash = await bcrypt.hash(registerUserDto.password, saltRounds);
-    await this.userService.registerUser({
+    const user = await this.userService.registerUser({
       ...registerUserDto,
       password: hash,
     });
 
+    const payload = { sub: user.id };
+
+    const token = await this.jwtService.signAsync(payload);
+
     return {
       message: 'User registered successfuly, Please login',
+      token,
     };
   }
 
@@ -59,19 +64,18 @@ export class AuthService {
         throw new BadRequestException('Invalid password');
       }
 
-      const payload = { sub: user.id };
-
-      const token = await this.jwtService.signAsync(payload);
-
       const { password, ...safeUser } = user; // here we are destructuring the password from user and other data stores in safeUser and then sand safeUser in the res. so response will not showing the password field
 
       return {
         message: 'Login successful',
-        token,
         user: safeUser,
       };
     } catch (error) {
       throw new ConflictException(error.response);
     }
   }
+
+  
+
+
 }
