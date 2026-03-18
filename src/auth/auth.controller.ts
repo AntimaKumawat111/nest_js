@@ -16,6 +16,7 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
 } from 'src/dto/forgotPasswordDto.dto';
+import { EditProfileDto } from 'src/dto/editProfile.Dto';
 
 @Controller('auth')
 export class AuthController {
@@ -42,7 +43,7 @@ export class AuthController {
     const userId = req.user.sub;
     const user = await this.userService.getUserById(userId);
     // console.log('------> user is', user);
-    return user;
+    return { message: 'Profile details', user };
   }
 
   @Post('forgot-password')
@@ -51,9 +52,21 @@ export class AuthController {
     return user;
   }
 
-  @UseGuards(AuthGuard) 
+  @UseGuards(AuthGuard)
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
-   return await this.userService.resetPassword(resetPasswordDto);
+    return await this.userService.resetPassword(resetPasswordDto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('edit-profile')
+  async editProfile(@Request() req, @Body() editProfileDto: EditProfileDto) {
+    const user = await this.userService.editProfile(
+      req.user.sub,
+      editProfileDto,
+    );
+    console.log('----userrr', user);
+
+    return { message: 'Profile update successfully!!', user };
   }
 }

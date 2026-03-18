@@ -14,6 +14,7 @@ import {
   ForgotPasswordDto,
   ResetPasswordDto,
 } from 'src/dto/forgotPasswordDto.dto';
+import { EditProfileDto } from 'src/dto/editProfile.Dto';
 
 @Injectable()
 export class UserService {
@@ -50,8 +51,7 @@ export class UserService {
   }
 
   async getUserById(id: string) {
-    const user = await this.userModule.findById(id).select('-password');
-    // console.log('users are:', user, 'id is:', id);
+    const user = await this.userModule.findById(id).select('-password'); // remove password field
     return user;
   }
 
@@ -60,13 +60,11 @@ export class UserService {
       email: forgotPasswordDto.email,
     });
 
-    console.log('user email is', user);
-
     if (!user) {
       throw new BadRequestException('User not found');
     }
 
-    const OTP = Math.floor(100000 + Math.random() * 900000);
+    const OTP = Math.floor(100000 + Math.random() * 900000); //generate random otp
 
     user.resetOtp = OTP;
     user.expireOtp = Date.now() + 10 * 60 * 1000;
@@ -100,8 +98,7 @@ export class UserService {
       throw new BadRequestException('OTP expired');
     }
 
-    // make new password hash
-    const hashedPassword = await bcrypt.hash(resetPasswordDto.newPassword, 10);
+    const hashedPassword = await bcrypt.hash(resetPasswordDto.newPassword, 10); // make new password hash
     user.password = hashedPassword; // update password with the new password
     user.resetOtp = null;
     user.expireOtp = null;
@@ -109,4 +106,24 @@ export class UserService {
 
     return { message: 'Password reset successfully!!' };
   }
+
+  async editProfile(userId: string, editProfileDto: EditProfileDto) {
+    const user = await this.getUserById(userId);
+    console.log('user is', user);
+
+    if (!user) {
+      throw new BadRequestException('User not found!!');
+    }
+
+    if (!editProfileDto.fname || !editProfileDto.lname) return;
+
+    user.fname = editProfileDto.fname;
+    user.lname = editProfileDto.lname;
+
+    await user.save();
+    return user;
+  }
+
+
+  
 }
